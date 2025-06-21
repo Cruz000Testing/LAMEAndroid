@@ -1,0 +1,112 @@
+name: Build LAME with NDK (Optimized)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+env:
+  LAME_VERSION: "3.100"
+  LAME_SHA256: "ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [arm64-v8a, armeabi-v7a, x86, x86_64]
+        include:
+          - arch: arm64-v8a
+            clang_prefix: aarch64-linux-android
+            extra_cflags: ""
+          - arch: armeabi-v7a
+            clang_prefix: armv7a-linux-androideabi
+            extra_cflags: "-march=armv7-a -mfloat-abi=softfp -mfpu=neon"
+          - arch: x86
+            clang_prefix: i686-linux-android
+            extra_cflags: "-march=i686 -msse3 -mfpmath=sse"
+          - arch: x86_64
+            clang_prefix: x86_64-linux-android
+            extra_cflags: "-march=x86-64 -msse4.2 -mpopcnt"
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # Cache mejorado con v4 (incluye verificación de checksum)
+    - name: Cache LAME source
+      uses: actions/cache@v4
+      id: cache-lame
+      with:
+        path: lame-${{ env.LAME_VERSION }}
+        key: lame-${{ env.LAME_VERSION }}-${{ env.LAME_SHA256 }}
+        restore-keys: |
+          lame-${{ env.LAME_VERSION }}-
+
+    # Descarga con verificación de integridad
+    - name: Download and verify LAME
+      if: steps.cache-lame.outputs.cache-hit != 'true'
+      run: |
+        wget ${{ env.LAME_URL }} -O lame.tar.gz
+        echo "${{ env.LAME_SHA256 }}  lame.tar.gz" | sha256sum --check
+        tar xzf lame.tar.gz
+        rm lame.tar.gz
+
+    # NDK con caching implícito en v1 (no requiere cache manual)
+    - name: Set up Android NDK
+      uses: nttld/setup-ndk@v1
+      with:
+        ndk-version: r27c
+        add-to-path: true
+
+    # Paso de compilación (igual que antes)
+    - name: Build LAME
+      run: |
+        # Usar NDK del paso anterior
+        export NDK_PATH=${{ steps.setup-ndk.outputs.ndk-path }}
+        TOOLCHAIN=$NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64
+        API_LEVEL=25
+        
+        # Variables de arquitectura
+        ARCH=${{ matrix.arch }}
+        CLANG_PREFIX=${{ matrix.clang_prefix }}
+        EXTRA_CFLAGS="${{ matrix.extra_cflags }}"
+        
+        # Directorios de trabajo
+        INSTALL_DIR="install/$ARCH"
+        mkdir -p $INSTALL_DIR
+        
+        # Configurar toolchain
+        export AR=$TOOLCHAIN/bin/llvm-ar
+        export CC=$TOOLCHAIN/bin/${CLANG_PREFIX}${API_LEVEL}-clang
+        export CXX=$TOOLCHAIN/bin/${CLANG_PREFIX}${API_LEVEL}-clang++
+        
+        # Entrar al directorio fuente
+        cd lame-${{ env.3.100 }}
+        
+        # Configurar con opciones de máxima calidad
+        ./configure \
+          --host=${CLANG_PREFIX%%-*} \
+          --prefix=$(pwd)/../$INSTALL_DIR \
+          --disable-shared \
+          --enable-static \
+          --disable-frontend \
+          --enable-float \
+          $([[ "$ARCH" == x86* ]] && echo "--disable-nasm") \
+          CFLAGS="-O3 -fPIC $EXTRA_CFLAGS" \
+          CPPFLAGS="-I$TOOLCHAIN/sysroot/usr/include" \
+          LDFLAGS="-L$TOOLCHAIN/sysroot/usr/lib"
+        
+        # Compilar e instalar
+        make -j$(nproc)
+        make install
+        cd ..
+        
+    # Artifact v4 con compresión mejorada
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: lame-${{ matrix.arch }}
+        path: install/${{ matrix.arch }}
+        compression-level: 9  # Máxima compresión
+        retention-days: 3
