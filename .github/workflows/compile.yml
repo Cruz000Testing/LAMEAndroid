@@ -68,9 +68,9 @@ jobs:
         API_LEVEL=25
         
         # Variables de arquitectura
-        ARCH=x86
-        CLANG_PREFIX=i686-linux-android
-        EXTRA_CFLAGS="-march=i686 -msse3 -mfpmath=sse"
+        ARCH=${{ matrix.arch }}
+        CLANG_PREFIX=${{ matrix.clang_prefix }}
+        EXTRA_CFLAGS="${{ matrix.extra_cflags }}"
         
         # Directorios de trabajo
         INSTALL_DIR="install/$ARCH"
@@ -100,7 +100,7 @@ jobs:
         make -j$(nproc)
         make install
         cd ..
-        
+    
     # Artifact v4 con compresión mejorada
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
