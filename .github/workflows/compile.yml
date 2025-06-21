@@ -7,9 +7,8 @@ on:
 
 env:
   LAME_VERSION: "3.100"
-  LAME_URL: "https://downloads.sourceforge.net/project/lame/lame/${{ env.LAME_VERSION }}/lame-${{ env.LAME_VERSION }}.tar.gz"
   LAME_SHA256: "ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e"
-  
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -48,7 +47,7 @@ jobs:
     - name: Download and verify LAME
       if: steps.cache-lame.outputs.cache-hit != 'true'
       run: |
-        wget ${{ env.LAME_URL }} -O lame.tar.gz
+        wget https://downloads.sourceforge.net/project/lame/lame/${{ env.LAME_VERSION }}/lame-${{ env.LAME_VERSION }}.tar.gz -O lame.tar.gz
         echo "${{ env.LAME_SHA256 }}  lame.tar.gz" | sha256sum --check
         tar xzf lame.tar.gz
         rm lame.tar.gz
