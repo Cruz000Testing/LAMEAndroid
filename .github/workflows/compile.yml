@@ -62,15 +62,15 @@ jobs:
     # Paso de compilación (igual que antes)
     - name: Build LAME
       run: |
-        # Usar NDK del paso anterior
-        export NDK_PATH=${{ steps.setup-ndk.outputs.ndk-path }}
+        # Usar NDK del paso anterior (asegúrate que setup-ndk@v1 se ejecutó antes)
+        export NDK_PATH=$ANDROID_NDK_HOME
         TOOLCHAIN=$NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64
         API_LEVEL=25
         
         # Variables de arquitectura
-        ARCH=${{ matrix.arch }}
-        CLANG_PREFIX=${{ matrix.clang_prefix }}
-        EXTRA_CFLAGS="${{ matrix.extra_cflags }}"
+        ARCH=x86
+        CLANG_PREFIX=i686-linux-android
+        EXTRA_CFLAGS="-march=i686 -msse3 -mfpmath=sse"
         
         # Directorios de trabajo
         INSTALL_DIR="install/$ARCH"
@@ -82,20 +82,19 @@ jobs:
         export CXX=$TOOLCHAIN/bin/${CLANG_PREFIX}${API_LEVEL}-clang++
         
         # Entrar al directorio fuente
-        cd lame-${{ env.LAME_VERSION }}
+        cd lame-$LAME_VERSION
         
         # Configurar con opciones de máxima calidad
         ./configure \
-        --host=${{ matrix.host }} \
-        --prefix=$(pwd)/../install/${{ matrix.arch }} \
-        --disable-shared \
-        --enable-static \
-        --disable-frontend \
-        $([[ "${{ matrix.arch }}" == x86* ]] && echo "--disable-nasm") \
-        CFLAGS="-O3 -fPIC ${{ matrix.flags }}" \
-        CPPFLAGS="-I$TOOLCHAIN/sysroot/usr/include" \
-        LDFLAGS="-L$TOOLCHAIN/sysroot/usr/lib/${{ matrix.host }}/$API_LEVEL" \
-        CC=$TOOLCHAIN/bin/${{ matrix.host }}$API_LEVEL-clang
+          --host=${CLANG_PREFIX} \
+          --prefix=$(pwd)/../$INSTALL_DIR \
+          --disable-shared \
+          --enable-static \
+          --disable-frontend \
+          --disable-nasm \
+          CFLAGS="-O3 -fPIC $EXTRA_CFLAGS" \
+          CPPFLAGS="-I$TOOLCHAIN/sysroot/usr/include" \
+          LDFLAGS="-L$TOOLCHAIN/sysroot/usr/lib/$API_LEVEL"
         
         # Compilar e instalar
         make -j$(nproc)
