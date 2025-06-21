@@ -86,16 +86,16 @@ jobs:
         
         # Configurar con opciones de máxima calidad
         ./configure \
-          --host=${{ matrix.host }} \
-          --prefix=$GITHUB_WORKSPACE/install/${{ matrix.arch }} \
-          --disable-shared \
-          --enable-static \
-          --disable-frontend \
-          --disable.nasm \
-          $([[ "$ARCH" == x86* ]] && echo "--disable-nasm") \
-          CFLAGS="-O3 -fPIC $EXTRA_CFLAGS" \
-          CPPFLAGS="-I$TOOLCHAIN/sysroot/usr/include" \
-          LDFLAGS="-L$TOOLCHAIN/sysroot/usr/lib"
+        --host=${{ matrix.host }} \
+        --prefix=$(pwd)/../install/${{ matrix.arch }} \
+        --disable-shared \
+        --enable-static \
+        --disable-frontend \
+        $([[ "${{ matrix.arch }}" == x86* ]] && echo "--disable-nasm") \
+        CFLAGS="-O3 -fPIC ${{ matrix.flags }}" \
+        CPPFLAGS="-I$TOOLCHAIN/sysroot/usr/include" \
+        LDFLAGS="-L$TOOLCHAIN/sysroot/usr/lib/${{ matrix.host }}/$API_LEVEL" \
+        CC=$TOOLCHAIN/bin/${{ matrix.host }}$API_LEVEL-clang
         
         # Compilar e instalar
         make -j$(nproc)
