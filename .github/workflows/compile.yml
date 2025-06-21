@@ -82,7 +82,7 @@ jobs:
         export CXX=$TOOLCHAIN/bin/${CLANG_PREFIX}${API_LEVEL}-clang++
         
         # Entrar al directorio fuente
-        cd lame-${{ env.3.100 }}
+        cd lame-${{ env.LAME_VERSION }}
         
         # Configurar con opciones de máxima calidad
         ./configure \
