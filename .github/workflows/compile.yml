@@ -14,20 +14,20 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: [arm64-v8a, armeabi-v7a, x86, x86_64]
+        arch: [arm64-v8a, armeabi-v7a, x86_64, x86]
         include:
           - arch: arm64-v8a
             clang_prefix: aarch64-linux-android
-            extra_cflags: ""
+            extra_cflags: "-march=armv8-a"
           - arch: armeabi-v7a
             clang_prefix: armv7a-linux-androideabi
-            extra_cflags: "-march=armv7-a -mfloat-abi=softfp -mfpu=neon"
-          - arch: x86
-            clang_prefix: i686-linux-android
-            extra_cflags: "-march=i686 -msse3 -mfpmath=sse"
+            extra_cflags: "-march=armv7-a -mfpu=neon -mfloat-abi=hard"
           - arch: x86_64
             clang_prefix: x86_64-linux-android
             extra_cflags: "-march=x86-64 -msse4.2 -mpopcnt"
+          - arch: x86
+            clang_prefix: i686-linux-android
+            extra_cflags: "-march=core2 -msse3 -mfpmath=sse"
 
     steps:
     - name: Checkout
