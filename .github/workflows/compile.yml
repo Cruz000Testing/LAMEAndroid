@@ -18,7 +18,7 @@ jobs:
         include:
           - arch: arm64-v8a
             clang_prefix: aarch64-linux-android
-            extra_cflags: "-march=armv8-a"
+            extra_cflags: ""
           - arch: armeabi-v7a
             clang_prefix: armv7a-linux-androideabi
             extra_cflags: "-march=armv7-a -mfpu=neon -mfloat-abi=hard"
