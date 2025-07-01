@@ -97,6 +97,7 @@ jobs:
           LDFLAGS="-L$TOOLCHAIN/sysroot/usr/lib/$API_LEVEL"
         
         # Compilar e instalar
+        make clean
         make -j$(nproc)
         make install
         cd ..
