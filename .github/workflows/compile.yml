@@ -21,7 +21,7 @@ jobs:
             extra_cflags: ""
           - arch: armeabi-v7a
             clang_prefix: armv7a-linux-androideabi
-            extra_cflags: "-march=armv7-a -mfpu=neon -mfloat-abi=hard"
+            extra_cflags: "-march=armv7-a -mfloat-abi=hard -mfpu=neon"
           - arch: x86_64
             clang_prefix: x86_64-linux-android
             extra_cflags: "-march=x86-64 -msse4.2 -mpopcnt"
